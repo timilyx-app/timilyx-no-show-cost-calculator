@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora de No-Show | Timilyx</title>
+
+  <!-- Basic SEO -->
+  <meta name="description" content="Calcula cuánto dinero pierde tu negocio por no-show y cuánto podrías recuperar reduciendo ausencias. Herramienta gratuita de Timilyx." />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Calculadora de No-Show | Timilyx" />
+  <meta property="og:description" content="Estima pérdidas por ausencias y potencial de recuperación. Herramienta gratuita." />
+  <meta property="og:type" content="website" />
+  <!-- Si luego subes una imagen OG a tu bucket o al repo, reemplaza esta URL -->
+  <!-- <meta property="og:image" content="https://timilyx.cl/og/no-show-calculator.png" /> -->
+  <link rel="icon" type="image/svg+xml" href="https://timilyx.cl/assets/media/logos/favicon.ico">
+
+  <style>
+    :root{
+      --bg0: #07070C;
+      --bg1: #0B0B12;
+      --card: rgba(255,255,255,.06);
+      --card2: rgba(255,255,255,.08);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.65);
+
+      /* Timilyx vibe: burgundy + turquoise */
+      --burgundy: #6B0F2E;
+      --burgundy2:#9B1843;
+      --turq: #00C9A7;
+      --turq2:#34E3C8;
+
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --radius: 18px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", Helvetica, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1200px 800px at 15% 10%, rgba(107,15,46,.35) 0%, rgba(107,15,46,0) 55%),
+        radial-gradient(1000px 700px at 85% 25%, rgba(0,201,167,.18) 0%, rgba(0,201,167,0) 55%),
+        radial-gradient(900px 600px at 50% 110%, rgba(155,24,67,.18) 0%, rgba(155,24,67,0) 60%),
+        linear-gradient(180deg, var(--bg0) 0%, var(--bg1) 100%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 42px 18px;
+    }
+
+    /* subtle grid */
+    body:before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:
+        linear-gradient(to right, rgba(255,255,255,.04) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255,255,255,.04) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(circle at 50% 20%, rgba(0,0,0,1) 0%, rgba(0,0,0,.1) 55%, rgba(0,0,0,0) 75%);
+      opacity:.35;
+    }
+
+    .wrap{
+      width: min(980px, 100%);
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 18px;
+    }
+    @media (max-width: 920px){
+      .wrap{ grid-template-columns: 1fr; }
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+    }
+
+    .panel:after{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background:
+        radial-gradient(600px 250px at 10% 0%, rgba(155,24,67,.35), transparent 55%),
+        radial-gradient(500px 220px at 90% 0%, rgba(0,201,167,.22), transparent 55%);
+      filter: blur(24px);
+      opacity:.55;
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .panel > *{ position:relative; z-index:1; }
+
+    .header{
+      padding: 22px 22px 10px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,201,167,.25);
+      background: rgba(0,201,167,.08);
+      color: rgba(255,255,255,.88);
+      font-size: 12px;
+      letter-spacing: .2px;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, var(--turq2), var(--turq));
+      box-shadow: 0 0 0 4px rgba(0,201,167,.10);
+    }
+
+    h1{
+      margin: 14px 0 8px;
+      font-size: clamp(24px, 2.6vw, 34px);
+      line-height: 1.12;
+      letter-spacing: -.4px;
+    }
+    .sub{
+      margin:0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+      max-width: 58ch;
+    }
+
+    .content{
+      padding: 14px 22px 22px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 920px){
+      .content{ grid-template-columns: 1fr; }
+    }
+
+    .field{
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 12px 12px 10px;
+      transition: border-color .2s ease, transform .2s ease;
+    }
+    .field:focus-within{
+      border-color: rgba(0,201,167,.35);
+      transform: translateY(-1px);
+    }
+
+    label{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:baseline;
+      font-size: 12px;
+      color: rgba(255,255,255,.72);
+      margin-bottom: 8px;
+    }
+    .hint{
+      color: rgba(255,255,255,.45);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    input, select{
+      width:100%;
+      border:none;
+      outline:none;
+      background: transparent;
+      color: var(--text);
+      font-size: 16px;
+      padding: 2px 2px 6px;
+    }
+    input::placeholder{ color: rgba(255,255,255,.35); }
+
+    .actions{
+      padding: 0 22px 22px;
+      display:flex;
+      gap: 12px;
+      align-items:center;
+    }
+    @media (max-width: 920px){
+      .actions{ flex-direction: column; align-items:stretch; }
+    }
+
+    .btn{
+      appearance:none;
+      border:none;
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: .2px;
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      transition: transform .15s ease, filter .15s ease, box-shadow .15s ease;
+      user-select:none;
+    }
+    .btn-primary{
+      flex:1;
+      background: linear-gradient(135deg, rgba(0,201,167,1) 0%, rgba(52,227,200,1) 100%);
+      color: #07120F;
+      box-shadow: 0 14px 28px rgba(0,201,167,.18);
+    }
+    .btn-primary:hover{ filter: brightness(1.02); transform: translateY(-1px); }
+    .btn-primary:active{ transform: translateY(0px) scale(.99); }
+
+    .btn-ghost{
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: rgba(255,255,255,.84);
+    }
+    .btn-ghost:hover{ filter: brightness(1.05); transform: translateY(-1px); }
+    .btn-ghost:active{ transform: translateY(0px) scale(.99); }
+
+    .side{
+      padding: 22px;
+    }
+
+    .kpis{
+      display:grid;
+      gap: 12px;
+    }
+    .kpi{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      padding: 14px 14px 12px;
+    }
+    .kpi .t{
+      color: rgba(255,255,255,.70);
+      font-size: 12px;
+      margin-bottom: 8px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+    .kpi .v{
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -.3px;
+    }
+    .kpi small{
+      display:block;
+      margin-top: 6px;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+      line-height:1.5;
+    }
+
+    .accent-loss{
+      background: linear-gradient(135deg, rgba(107,15,46,.45) 0%, rgba(107,15,46,.20) 55%, rgba(255,255,255,.04) 100%);
+      border-color: rgba(155,24,67,.25);
+    }
+    .accent-recover{
+      background: linear-gradient(135deg, rgba(0,201,167,.20) 0%, rgba(0,201,167,.10) 55%, rgba(255,255,255,.04) 100%);
+      border-color: rgba(0,201,167,.25);
+    }
+
+    .note{
+      margin-top: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.04);
+      padding: 14px;
+      color: rgba(255,255,255,.68);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .note strong{ color: rgba(255,255,255,.88); }
+
+    .footer{
+      margin-top: 16px;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+      color: rgba(255,255,255,.55);
+      font-size: 12px;
+    }
+    .footer a{
+      color: rgba(0,201,167,.92);
+      text-decoration:none;
+    }
+    .footer a:hover{ text-decoration:underline; }
+
+    .shake{
+      animation: shake .28s linear 1;
+    }
+    @keyframes shake{
+      0%{ transform: translateX(0); }
+      25%{ transform: translateX(-6px); }
+      50%{ transform: translateX(6px); }
+      75%{ transform: translateX(-4px); }
+      100%{ transform: translateX(0); }
+    }
+
+    .divider{
+      height: 1px;
+      background: rgba(255,255,255,.10);
+      margin: 14px 0;
+      border-radius:999px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(255,255,255,.05);
+      color: rgba(255,255,255,.70);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .mini{
+      font-size:12px;
+      color: rgba(255,255,255,.55);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- LEFT: inputs -->
+    <section class="panel">
+      <div class="header">
+        <p><a href="https://timilyx.cl"><img alt="Logo-timilyx" style="width: 8rem;" src="https://timilyx.cl/assets/media/logos/logo-dark-1.png"></a></p>
+        <div class="badge"><span class="dot"></span> Herramienta gratuita • Timilyx</div>
+        <h1>Calculadora de pérdidas por <span style="color: var(--turq2);">No-Show</span></h1>
+        <p class="sub">
+          Estima cuánto dinero se te va por ausencias y cuánto podrías recuperar reduciendo tu tasa de no-show.
+          Ideal para negocios con agenda: profesionales, clínicas, centros y servicios.
+        </p>
+      </div>
+
+      <div class="content" id="formCard">
+        <div class="field">
+          <label>
+            Precio promedio por cita
+            <span class="hint">Ej: 25.000</span>
+          </label>
+          <input inputmode="numeric" id="price" placeholder="CLP" />
+        </div>
+
+        <div class="field">
+          <label>
+            Citas por semana
+            <span class="hint">Ej: 30</span>
+          </label>
+          <input type="number" id="appointments" placeholder="Cantidad" min="0" step="1" />
+        </div>
+
+        <div class="field">
+          <label>
+            Tasa de no-show (%)
+            <span class="hint">Ej: 15</span>
+          </label>
+          <input type="number" id="noshow" placeholder="%" min="0" max="100" step="0.1" />
+        </div>
+
+        <div class="field">
+          <label>
+            % recuperado (reagendado)
+            <span class="hint">Ej: 20</span>
+          </label>
+          <input type="number" id="recovery" placeholder="%" min="0" max="100" step="0.1" />
+        </div>
+
+        <div class="field" style="grid-column: 1 / -1;">
+          <label>
+            Si reduces no-show a…
+            <span class="hint">Simulación</span>
+          </label>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <input type="number" id="targetNoshow" placeholder="Nuevo % no-show (Ej: 8)" min="0" max="100" step="0.1" />
+            <select id="currency">
+              <option value="CLP" selected>CLP (Chile)</option>
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="MXN">MXN</option>
+              <option value="ARS">ARS</option>
+            </select>
+          </div>
+          <div class="mini" style="margin-top:8px;">
+            Tip: si no sabes tu tasa, prueba con 10%–20% para una estimación inicial.
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-primary" id="btnCalc">
+          Calcular ahora
+          <span aria-hidden="true">→</span>
+        </button>
+        <button class="btn btn-ghost" id="btnReset" type="button">Limpiar</button>
+        <span class="pill" title="Estimación con 4 semanas por mes">4 semanas/mes</span>
+      </div>
+    </section>
+
+    <!-- RIGHT: results -->
+    <aside class="panel">
+      <div class="side">
+        <div style="display:flex; justify-content:space-between; gap:10px; align-items:center;">
+          <div>
+            <div class="badge" style="border-color: rgba(155,24,67,.25); background: rgba(155,24,67,.10);">
+              <span class="dot" style="background: radial-gradient(circle at 30% 30%, #ff4d8d, var(--burgundy2)); box-shadow: 0 0 0 4px rgba(155,24,67,.12);"></span>
+              Resultado
+            </div>
+            <h2 style="margin:12px 0 0; font-size:18px; letter-spacing:-.2px;">Resumen financiero</h2>
+            <p style="margin:6px 0 0; color: var(--muted); font-size:13px; line-height:1.6;">
+              Completa los campos y calcula. Verás pérdidas y recuperación potencial.
+            </p>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="kpis" id="results" style="display:none;">
+          <div class="kpi accent-loss">
+            <div class="t">
+              <span>💸 Pérdida mensual estimada</span>
+              <span class="pill" id="kpiNoshow"></span>
+            </div>
+            <div class="v" id="monthlyLoss">$0</div>
+            <small>Basado en tu precio promedio, citas/semana y tasa de no-show.</small>
+          </div>
+
+          <div class="kpi">
+            <div class="t"><span>📉 Pérdida anual estimada</span><span class="pill">52 semanas</span></div>
+            <div class="v" id="annualLoss">$0</div>
+            <small>Una referencia útil para dimensionar el impacto total.</small>
+          </div>
+
+          <div class="kpi accent-recover">
+            <div class="t">
+              <span>📈 Recuperación mensual (reagendados)</span>
+              <span class="pill" id="kpiRecovery"></span>
+            </div>
+            <div class="v" id="recovered">$0</div>
+            <small>Ingreso potencial recuperado según tu % de reagendamiento.</small>
+          </div>
+
+          <div class="kpi">
+            <div class="t"><span>✨ Ganancia mensual si bajas tu no-show</span><span class="pill" id="kpiTarget"></span></div>
+            <div class="v" id="improvementGain">$0</div>
+            <small>Simulación: cuánto podrías mejorar si reduces tu tasa actual.</small>
+          </div>
+        </div>
+
+        <div class="note" id="emptyState">
+          <strong>Tip rápido:</strong> si tu no-show es 15% y atiendes 30 citas por semana,
+          estás dejando dinero en la mesa todos los meses.  
+          <div style="margin-top:10px;">
+            Timilyx ayuda a reducir ausencias con recordatorios, re-agendamiento y automatizaciones.
+          </div>
+        </div>
+
+        <div class="footer">
+          <span>Built by <a href="https://timilyx.cl" target="_blank" rel="noopener">Timilyx</a></span>
+          <span>Open-source • MIT</span>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <script>
+    const els = {
+      price: document.getElementById('price'),
+      appointments: document.getElementById('appointments'),
+      noshow: document.getElementById('noshow'),
+      recovery: document.getElementById('recovery'),
+      targetNoshow: document.getElementById('targetNoshow'),
+      currency: document.getElementById('currency'),
+
+      btnCalc: document.getElementById('btnCalc'),
+      btnReset: document.getElementById('btnReset'),
+
+      results: document.getElementById('results'),
+      emptyState: document.getElementById('emptyState'),
+      formCard: document.getElementById('formCard'),
+
+      monthlyLoss: document.getElementById('monthlyLoss'),
+      annualLoss: document.getElementById('annualLoss'),
+      recovered: document.getElementById('recovered'),
+      improvementGain: document.getElementById('improvementGain'),
+
+      kpiNoshow: document.getElementById('kpiNoshow'),
+      kpiRecovery: document.getElementById('kpiRecovery'),
+      kpiTarget: document.getElementById('kpiTarget'),
+    };
+
+    // Default values (nice UX)
+    els.recovery.value = "20";
+    els.targetNoshow.value = "8";
+
+    function formatMoney(value, currency){
+      try{
+        const locale = (currency === 'CLP') ? 'es-CL' : 'en-US';
+        return new Intl.NumberFormat(locale, {
+          style: 'currency',
+          currency,
+          maximumFractionDigits: (currency === 'CLP') ? 0 : 2
+        }).format(value);
+      }catch(e){
+        // Fallback
+        const fixed = (currency === 'CLP') ? Math.round(value).toString() : value.toFixed(2);
+        return (currency + " " + fixed);
+      }
+    }
+
+    function parseCLPInput(str){
+      // allow user to type "25.000" or "25000" or "25,000"
+      if (typeof str !== 'string') return NaN;
+      const cleaned = str.replace(/[^\d]/g,'');
+      return cleaned ? parseFloat(cleaned) : NaN;
+    }
+
+    function shake(el){
+      el.classList.remove('shake');
+      void el.offsetWidth;
+      el.classList.add('shake');
+    }
+
+    function requiredNumber(n){
+      return typeof n === 'number' && isFinite(n) && n >= 0;
+    }
+
+    function clampPercent(p){
+      if (!isFinite(p)) return 0;
+      return Math.min(100, Math.max(0, p));
+    }
+
+    function calculate(){
+      const currency = els.currency.value;
+
+      const price = parseCLPInput(els.price.value);
+      const appointments = parseFloat(els.appointments.value);
+
+      const noshowPct = clampPercent(parseFloat(els.noshow.value));
+      const recoveryPct = clampPercent(parseFloat(els.recovery.value || "0"));
+      const targetNoshowPct = clampPercent(parseFloat(els.targetNoshow.value || "0"));
+
+      const noshow = noshowPct / 100;
+      const recovery = recoveryPct / 100;
+      const targetNoshow = targetNoshowPct / 100;
+
+      // Validate required fields
+      if (!requiredNumber(price) || !requiredNumber(appointments) || isNaN(noshowPct)){
+        shake(els.formCard);
+        alert('Completa: precio promedio, citas/semana y tasa de no-show.');
+        return;
+      }
+
+      // Base
+      const weeklyRevenue = price * appointments;
+      const weeklyLoss = weeklyRevenue * noshow;
+
+      // Monthly/Annual (simple estimation)
+      const monthlyLoss = weeklyLoss * 4;
+      const annualLoss = weeklyLoss * 52;
+
+      // Recovery (rescheduled portion of monthly loss)
+      const recoveredRevenue = monthlyLoss * recovery;
+
+      // Improvement scenario
+      const targetWeeklyLoss = weeklyRevenue * targetNoshow;
+      const targetMonthlyLoss = targetWeeklyLoss * 4;
+
+      const improvementGain = Math.max(0, monthlyLoss - targetMonthlyLoss);
+
+      // Render
+      els.monthlyLoss.textContent = formatMoney(monthlyLoss, currency);
+      els.annualLoss.textContent = formatMoney(annualLoss, currency);
+      els.recovered.textContent = formatMoney(recoveredRevenue, currency);
+      els.improvementGain.textContent = formatMoney(improvementGain, currency);
+
+      els.kpiNoshow.textContent = `No-show: ${noshowPct.toFixed(1)}%`;
+      els.kpiRecovery.textContent = `Reagendo: ${recoveryPct.toFixed(1)}%`;
+      els.kpiTarget.textContent = `Meta: ${targetNoshowPct.toFixed(1)}%`;
+
+      els.results.style.display = 'grid';
+      els.emptyState.style.display = 'none';
+    }
+
+    function reset(){
+      els.price.value = '';
+      els.appointments.value = '';
+      els.noshow.value = '';
+      els.recovery.value = '20';
+      els.targetNoshow.value = '8';
+      els.currency.value = 'CLP';
+
+      els.results.style.display = 'none';
+      els.emptyState.style.display = 'block';
+    }
+
+    // price input: keep digits only (helps CLP)
+    els.price.addEventListener('input', () => {
+      const digits = els.price.value.replace(/[^\d]/g,'');
+      // format with dots for CLP readability (optional)
+      // simple grouping:
+      const withDots = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      els.price.value = withDots;
+    });
+
+    // Enter to calculate
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') calculate();
+    });
+
+    els.btnCalc.addEventListener('click', calculate);
+    els.btnReset.addEventListener('click', reset);
+  </script>
+</body>
+</html>
